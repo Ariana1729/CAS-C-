@@ -1,7 +1,7 @@
 # CAS(C)
 Experimental CAS in C
 
-Goal: Impliment solving of equations with steps that a human can understand
+Goal: Implement solving of equations with steps that a human can understand
 
 ## Expression types:
 0. variable
@@ -16,17 +16,10 @@ Goal: Impliment solving of equations with steps that a human can understand
 
 ## Simplification algorithms:
 
-`(a+b)+c=a+b+c`
-
-`a-b=a+-1*b`
-
-`(a*b)*c=a*b*C`
-
-`a/b=a*b^-1`
-
-`(a*b)+(a*c)=a*(b+c),(a*b)+(c*b)=(a+c)*b`
-
-`(a^b)*(a^c)=a^(b+c),(a^b)*(c^b)=(a*c)^b`
+ - Addition and multiplication commutativity
+ - Subtraction and division to addition and multiplication
+ - Expanding multiplication and exponentiation
+ - Factoring common terms for addition and multiplication
 
 ## Ordering
 
@@ -36,12 +29,11 @@ Same types but different lengths are just compared by a->len - b->len
 
 Numbers and variables are just compared by a - b
 
-Else compare function resursively scans tree, using pre-order search
+Else compare function recursively scans tree, using pre-order search
 
 
 
 ## ToDo
-* Expanding
 * Simplification of radicals and logarithms
 * Parser
 * Differentiation

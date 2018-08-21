@@ -1,13 +1,18 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<math.h>
 struct Expr{
 	int type;
 	union{
 		struct Expr **nodes;
-		int num;
+		double num;
 		char var;
 	}data;
 	int len;
+};
+struct Vars{
+    char var;
+    double num;
 };
 struct Expr *expr_var(char var){
 	struct Expr *ret=malloc(sizeof(struct Expr));
@@ -16,7 +21,7 @@ struct Expr *expr_var(char var){
 	ret->data.var=var;
 	return ret;
 }
-struct Expr *expr_num(int num){
+struct Expr *expr_num(double num){
 	struct Expr *ret=malloc(sizeof(struct Expr));
 	ret->type=1;
 	ret->len=1;
@@ -102,10 +107,11 @@ void expr_print(struct Expr *node){
 	int i;
 	switch(node->type){
 		case(0):printf("%c",node->data.var);return;
-		case(1):printf("%d",node->data.num);return;
+		case(1):printf("%f",node->data.num);return;
 		case(3):printf("(");expr_print(node->data.nodes[0]);printf(")-(");expr_print(node->data.nodes[1]);printf(")");break;
 		case(5):printf("(");expr_print(node->data.nodes[0]);printf(")/(");expr_print(node->data.nodes[1]);printf(")");break;
-		case(7):printf("log_(");expr_print(node->data.nodes[0]);printf(") (");expr_print(node->data.nodes[1]);printf(")");break;
+        case(7):printf("(");expr_print(node->data.nodes[0]);printf(")root(");expr_print(node->data.nodes[1]);printf(")");break;
+		case(8):printf("log_(");expr_print(node->data.nodes[0]);printf(") (");expr_print(node->data.nodes[1]);printf(")");break;
 		default:
 			printf("(");expr_print(node->data.nodes[0]);printf(")");
 			for(i=1;i<node->len;++i){
@@ -113,8 +119,113 @@ void expr_print(struct Expr *node){
 					case(2):printf("+");break;
 					case(4):printf("*");break;
 					case(6):printf("^");break;
+					default:printf("help");
 				}
 				printf("(");expr_print(node->data.nodes[i]);printf(")");
 			}	
 	}
+}
+void expr_cmpfree(struct Expr *a,struct Expr *b){
+	if(a==b)return;
+	if(a->type<2)return;
+	int i;
+	for(i=0;i<a->len;++i){
+		expr_cmpfree(a->data.nodes[i],b->data.nodes[i]);
+	}
+	free(b);
+}
+struct Expr *expr_dup(struct Expr *node){
+	struct Expr *ret=malloc(sizeof(struct Expr));
+	ret->type=node->type;
+	ret->len=node->len;
+	if(ret->type==0){
+		ret->data.var=node->data.var;
+		return ret;
+	}
+	if(ret->type==1){
+		ret->data.num=node->data.num;
+		return ret;
+	}
+	ret->data.nodes=malloc(ret->len*sizeof(struct Expr*));
+	int i;
+	for(i=0;i<ret->len;++i){
+		ret->data.nodes[i]=expr_dup(node->data.nodes[i]);
+	}
+	return ret;
+}
+struct Expr *expr_rm(struct Expr *node,int n){
+	int i;
+	struct Expr *ret=expr_dup(node->data.nodes[n]);
+	for(i=n+1;i<node->len;++i){
+		node->data.nodes[i-1]=node->data.nodes[i];
+	}
+	--node->len;
+	if(node->len==0){
+		free(node->data.nodes[0]);
+		return ret;
+	}
+	struct Expr **tmp=realloc(node->data.nodes,(node->len)*sizeof(struct Expr*));
+	if(tmp==NULL){
+		printf("Memory error, please try again\n");
+		exit(EXIT_FAILURE);
+	}
+	node->data.nodes=tmp;
+	return ret;
+}
+void expr_del(struct Expr *node,int n){
+	int i;
+	for(i=n+1;i<node->len;++i){
+		node->data.nodes[i-1]=node->data.nodes[i];
+	}
+	--node->len;
+	if(node->len==0){
+		return free(node->data.nodes[0]);
+	}
+	struct Expr **tmp=realloc(node->data.nodes,(node->len)*sizeof(struct Expr*));
+	if(tmp==NULL){
+		printf("Memory error, please try again\n");
+		exit(EXIT_FAILURE);
+	}
+	node->data.nodes=tmp;
+}
+void expr_free(struct Expr *node){
+	if(node->type<2)return free(node);
+	int i;
+	for(i=0;i<node->len;++i)expr_free(node->data.nodes[i]);
+}
+double expr_eval(struct Expr *node,struct Vars **variables,int n){
+    int i;double res;
+    switch(node->type){
+        case(0):
+            for(i=0;i<n;++i){
+                if(node->data.var==variables[i]->var)return variables[i]->num;
+            }
+            return 0;
+        case(1):return node->data.num;
+        case(2):
+            res=0;
+            for(i=0;i<node->len;++i){
+                res+=expr_eval(node->data.nodes[i],variables,n);
+            }
+            return res;
+        case(3):
+            return expr_eval(node->data.nodes[0],variables,n)-expr_eval(node->data.nodes[1],variables,n);
+        case(4):
+            res=1;
+            for(i=0;i<node->len;++i){
+                res*=expr_eval(node->data.nodes[i],variables,n);
+            }
+            return res;
+        case(5):
+            return expr_eval(node->data.nodes[0],variables,n)/expr_eval(node->data.nodes[1],variables,n);
+        case(6):
+            return pow(expr_eval(node->data.nodes[0],variables,n),expr_eval(node->data.nodes[1],variables,n));
+        case(7):
+            return pow(expr_eval(node->data.nodes[0],variables,n),1/expr_eval(node->data.nodes[1],variables,n));
+        case(8):
+            return log(expr_eval(node->data.nodes[0],variables,n))/log(1/expr_eval(node->data.nodes[1],variables,n));
+		default:
+			printf("help\n");
+			return 0;
+    }
 }
