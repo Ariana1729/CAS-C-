@@ -31,11 +31,15 @@ Numbers and variables are just compared by a - b
 
 Else compare function recursively scans tree, using pre-order search
 
+## Parser
 
+Uses shunting yard to parse from string to rpn
+
+Converts rpn to syntax tree
 
 ## ToDo
 * Simplification of radicals and logarithms
-* Parser
+* Parsing log(x) instead of log_(a)(b)
 * Differentiation
 * Integration(definite, indefinite, contour)
 * Differential equations
