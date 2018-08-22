@@ -11,6 +11,7 @@
 #define EXPR_EXP 6
 #define EXPR_ROOT 7
 #define EXPR_LOG 8
+#define EXPR_DIFF 9
 struct Expr{
 	int type;
 	union{
@@ -33,6 +34,7 @@ struct Expr *expr_div(struct Expr *dividend,struct Expr *divisor);
 struct Expr *expr_exp(struct Expr *base,struct Expr *exponent);
 struct Expr *expr_root(struct Expr *deg,struct Expr *rad);
 struct Expr *expr_log(struct Expr *base,struct Expr *alog);
+struct Expr *expr_diff(struct Expr *func);
 double expr_cmp(struct Expr *a,struct Expr *b);
 void expr_print(struct Expr *node);
 void expr_cmpfree(struct Expr *a,struct Expr *b);

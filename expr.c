@@ -12,6 +12,7 @@
 #define EXPR_EXP 6
 #define EXPR_ROOT 7
 #define EXPR_LOG 8
+#define EXPR_DIFF 9
 struct Expr{
 	int type;
 	union{
@@ -94,25 +95,33 @@ struct Expr *expr_root(struct Expr *deg,struct Expr *rad){
 	return ret;
 }
 struct Expr *expr_log(struct Expr *base,struct Expr *alog){
-	struct Expr *ret=malloc(sizeof(struct Expr));
-	ret->data.nodes=malloc(2*sizeof(struct Expr*));
-	ret->data.nodes[0]=base;
-	ret->data.nodes[1]=alog;
-	ret->type=EXPR_LOG;
-	ret->len=2;
-	return ret;
+    struct Expr *ret=malloc(sizeof(struct Expr));
+    ret->data.nodes=malloc(2*sizeof(struct Expr*));
+    ret->data.nodes[0]=base;
+    ret->data.nodes[1]=alog;
+    ret->type=EXPR_LOG;
+    ret->len=2;
+    return ret;
+}
+struct Expr *expr_diff(struct Expr *func){
+    struct Expr *ret=malloc(sizeof(struct Expr));
+    ret->data.nodes=malloc(sizeof(struct Expr*));
+    ret->data.nodes[0]=func;
+    ret->type=EXPR_DIFF;
+    ret->len=2;
+    return ret;
 }
 double expr_cmp(struct Expr *a,struct Expr *b){
-	if(a->type!=b->type)return a->type-b->type;
-	if(a->len!=b->len)return a->len-b->len;
-	if(a->type<0)return a->data.num-b->data.num;
-	unsigned int i;
-	double j;
-	for(i=0;i<a->len;++i){
-		j=expr_cmp(a->data.nodes[i],b->data.nodes[i]);
-		if(j)return j;
-	}
-	return 0;
+    if(a->type!=b->type)return a->type-b->type;
+    if(a->len!=b->len)return a->len-b->len;
+    if(a->type<0)return a->data.num-b->data.num;
+    unsigned int i;
+    double j;
+    for(i=0;i<a->len;++i){
+        j=expr_cmp(a->data.nodes[i],b->data.nodes[i]);
+        if(j)return j;
+    }
+    return 0;
 }
 void expr_print(struct Expr *node){
 	if(node->len==0)return;

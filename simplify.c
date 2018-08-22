@@ -2,8 +2,7 @@
 #include<stdlib.h>
 #include"expr.h"
 struct Expr *simplify_single(struct Expr *node){
-    if(node->len!=1)return node;
-    if(node->type<0)return node;
+    if(node->len!=1||node->type<0||node->type==EXPR_DIFF)return node;
     free(node);
     node=node->data.nodes[0];
     return node;

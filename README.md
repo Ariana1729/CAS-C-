@@ -38,8 +38,17 @@ Uses shunting yard to parse from string to rpn
 Converts rpn to syntax tree
 
 ## ToDo
+* Polynomial wrt var
+* Differentiation
+* Improve shunting yard algorithm
+  * Unary subtraction
+  * Making code easier to change
+  * Tokenizing to array
+  * Use array instead of stack and queue may be better?
 * Simplification of radicals and logarithms
 * Parsing log(x) instead of log_(a)(b)
-* Differentiation
 * Integration(definite, indefinite, contour)
 * Differential equations
+
+## Future ideas
+* Integral/ODE/etc. using neural nets
