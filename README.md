@@ -13,6 +13,7 @@ Goal: Implement solving of equations with steps that a human can understand
 6. a^b
 7. aroot(b)
 8. log_a(b)
+9. ln(a)
 
 ## Simplification algorithms:
 
@@ -38,13 +39,16 @@ Uses shunting yard to parse from string to rpn
 Converts rpn to syntax tree
 
 ## ToDo
-* Polynomial wrt var
-* Differentiation
+* Make code neater, have more headers so less functions clumped together
+* Adding more functions
 * Improve shunting yard algorithm
   * Unary subtraction
   * Making code easier to change
   * Tokenizing to array
   * Use array instead of stack and queue may be better?
+* Improve differentiation
+  * Use chain rule
+  * Take care of constant case instead of always assuming non-constant
 * Simplification of radicals and logarithms
 * Parsing log(x) instead of log_(a)(b)
 * Integration(definite, indefinite, contour)

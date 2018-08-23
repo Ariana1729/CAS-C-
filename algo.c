@@ -275,7 +275,7 @@ struct Expr *algo_sort(struct Expr *node){
     return node;
 }//sorts the node
 struct Expr *algo_expand(struct Expr *node){
-    simplify_single(node);
+    node=simplify_single(node);
     struct Expr *tmp;
     switch(node->type){
         case EXPR_ADD:
@@ -330,6 +330,7 @@ struct Expr *algo_expand(struct Expr *node){
         expr_free(tmp);
     }
     unsigned int i;
+    if(node->type<EXPR_LBRACE)return node;
     for(i=0;i<node->len;++i){
         node->data.nodes[i]=algo_expand(node->data.nodes[i]);
     }
@@ -381,13 +382,76 @@ struct Expr *algo_polynomial(struct Expr *node,struct Expr *var){
     return node;
 }//converts to a polynomial in var
 struct Expr *algo_differentiate(struct Expr *node,struct Expr *var){
+    if(var->type!=EXPR_VAR)return node;//not implemented DF/DG
+    unsigned int i;
+    struct Expr *tmp;
+    switch(node->type){
+        case EXPR_NUM:return expr_num(0);
+        case EXPR_VAR:return expr_num(node->data.var==var->data.var);
+        case EXPR_ADD:
+        case EXPR_SUB:
+            for(i=0;i<node->len;++i){
+                tmp=algo_differentiate(node->data.nodes[i],var);
+                node->data.nodes[i]=tmp;
+            }
+            return node;
+        case EXPR_MUL:
+            tmp=expr_dup(node);
+            expr_free(node);
+            node->len=tmp->len;
+            node->type=EXPR_ADD;
+            for(i=1;i<node->len;++i){
+                node->data.nodes[i]=expr_dup(tmp);
+                node->data.nodes[i]->data.nodes[i]=algo_differentiate(node->data.nodes[i]->data.nodes[i],var);
+            }
+            node->data.nodes[0]=tmp;
+            node->data.nodes[0]->data.nodes[0]=algo_differentiate(node->data.nodes[0]->data.nodes[0],var);
+            return node;
+        case EXPR_DIV:
+            tmp=node->data.nodes[0];
+            node->data.nodes[0]=expr_sub(expr_mul(algo_differentiate(expr_dup(node->data.nodes[0]),var),expr_dup(node->data.nodes[1])),
+                                         expr_mul(expr_dup(node->data.nodes[0]),algo_differentiate(expr_dup(node->data.nodes[1]),var)));
+            node->data.nodes[1]=expr_exp(node->data.nodes[1],expr_num(2));
+            expr_free(tmp);
+            return node;
+        case EXPR_EXP:
+            tmp=expr_mul(node,
+                    expr_add(
+                            expr_mul(
+                                    algo_differentiate(expr_dup(node->data.nodes[0]),var),
+                                    expr_div(expr_dup(node->data.nodes[1]),expr_dup(node->data.nodes[0]))),
+                            expr_mul(algo_differentiate(expr_dup(node->data.nodes[1]),var),expr_ln(expr_dup(node->data.nodes[0])))
+                    ));
+            return tmp;
+        case EXPR_ROOT:
+            tmp=expr_exp(node->data.nodes[0],expr_div(expr_num(1),node->data.nodes[1]));
+            expr_free(node);
+            return tmp;
+        case EXPR_LOG:
+            tmp=algo_differentiate(expr_div(expr_ln(node->data.nodes[0]),expr_ln(node->data.nodes[1])),var);
+            expr_free(node);
+            return tmp;
+        case EXPR_LN:
+            tmp=expr_div(algo_differentiate(node->data.nodes[0],var),node->data.nodes[0]);
+            expr_free(node);
+            return tmp;
+        default:
+            printf("help in expr_differentiate");
+            break;
+    }
     return node;
-}//differentate wrt var
+}//differentate wrt var,maybe impliment chain rule easier?
 int main(){
     struct Queue *queue=algo_parsetorpn("3+4+x*x+5*x-x^5+2.5x^2");
     algo_printqueue(queue);
     printf("\n");
     struct Expr *expression=algo_parsetotree(queue);
+    expr_print(expression);
+    printf("\n");
+    expression=algo_polynomial(expression,expr_var('x'));
+    expr_print(expression);
+    printf("\n");
+    expression=algo_differentiate(expression,expr_var('x'));
     expr_print(expression);
     printf("\n");
     expression=algo_polynomial(expression,expr_var('x'));

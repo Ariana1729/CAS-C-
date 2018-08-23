@@ -14,7 +14,7 @@
 #define EXPR_EXP 6
 #define EXPR_ROOT 7
 #define EXPR_LOG 8
-#define EXPR_DIFF 9
+#define EXPR_LN 9
 struct Expr{
 	int type;
 	union{
@@ -105,12 +105,12 @@ struct Expr *expr_log(struct Expr *base,struct Expr *alog){
     ret->len=2;
     return ret;
 }
-struct Expr *expr_diff(struct Expr *func){
+struct Expr *expr_ln(struct Expr *alog){
     struct Expr *ret=malloc(sizeof(struct Expr));
     ret->data.nodes=malloc(sizeof(struct Expr*));
-    ret->data.nodes[0]=func;
-    ret->type=EXPR_DIFF;
-    ret->len=2;
+    ret->data.nodes[0]=alog;
+    ret->type=EXPR_LN;
+    ret->len=1;
     return ret;
 }
 double expr_cmp(struct Expr *a,struct Expr *b){
@@ -149,6 +149,7 @@ void expr_print(struct Expr *node){
 		case EXPR_DIV:printf("(");expr_print(node->data.nodes[0]);printf(")/(");expr_print(node->data.nodes[1]);printf(")");break;
         case EXPR_ROOT:printf("(");expr_print(node->data.nodes[0]);printf(")root(");expr_print(node->data.nodes[1]);printf(")");break;
 		case EXPR_LOG:printf("log_(");expr_print(node->data.nodes[0]);printf(")(");expr_print(node->data.nodes[1]);printf(")");break;
+		case EXPR_LN:printf("ln(");expr_print(node->data.nodes[0]);printf(")");break;
 		default:
 			printf("(");expr_print(node->data.nodes[0]);printf(")");
 			for(i=1;i<node->len;++i){
@@ -269,8 +270,10 @@ double expr_eval(struct Expr *node,struct Vars **variables,unsigned int n){
             return pow(expr_eval(node->data.nodes[0],variables,n),1/expr_eval(node->data.nodes[1],variables,n));
         case EXPR_LOG:
             return log(expr_eval(node->data.nodes[1],variables,n))/log(expr_eval(node->data.nodes[0],variables,n));
+        case EXPR_LN:
+            return log(expr_eval(node->data.nodes[0],variables,n));
 		default:
-			printf("help\n");
+			printf("help in expr_eval\n");
 			return 0;
     }
 }

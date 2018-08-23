@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include"expr.h"
 struct Expr *simplify_single(struct Expr *node){
-    if(node->len!=1||node->type<0||node->type==EXPR_DIFF)return node;
+    if(node->len!=1||node->type<0||node->type!=EXPR_LN)return node;
     free(node);
     node=node->data.nodes[0];
     return node;
@@ -39,6 +39,16 @@ struct Expr *simplify_sub(struct Expr *node){
 struct Expr *simplify_mul(struct Expr *node){
     if(node->type!=EXPR_MUL)return node;
 	unsigned int i;
+    for(i=0;i<node->len;++i){
+        if(!expr_cmp(node->data.nodes[i],expr_num(0))){
+            expr_free(node);
+            return expr_num(0);
+        }
+        if(!expr_cmp(node->data.nodes[i],expr_num(1))){
+            expr_rm(node,i);
+            --i;
+        }
+    }
 	for(i=0;i<node->len;++i){
         if(node->data.nodes[i]->len==0){
             expr_rm(node,i);
