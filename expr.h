@@ -44,4 +44,7 @@ struct Expr *expr_rm(struct Expr *node,unsigned int n);
 void expr_del(struct Expr *node,unsigned int n);
 void expr_free(struct Expr *node);
 double expr_eval(struct Expr *node,struct Vars **variables,unsigned int n);
+int expr_peval_double(struct Expr *node);
+int expr_peval_int(struct Expr *node);
+struct Expr *expr_peval(struct Expr *node);
 #endif

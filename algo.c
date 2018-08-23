@@ -255,7 +255,7 @@ struct Expr *algo_parsetotree(struct Queue *rpn){
                 hold->token->node=expr_log(hold->token->node,tmpn);
                 break;
             default:
-                printf("help\n\n");
+                printf("help\n");
         }
         free(tok);
     }
@@ -350,13 +350,14 @@ struct Expr *algo_expandfull(struct Expr *node){
     return node;
 }
 struct Expr *algo_polynomial(struct Expr *node,struct Expr *var){
+
     return node;
 }//converts to a polynomial in var
 struct Expr *algo_differentiate(struct Expr *node,struct Expr *var){
     return node;
 }//differentate wrt var
 int main(){
-    struct Queue *queue=algo_parsetorpn("3*(1+2)*(2+6+3)");
+    struct Queue *queue=algo_parsetorpn("3*(1+2)*(2+6+3)+log_(x)4+5root24");
     algo_printqueue(queue);
     printf("\n");
     struct Expr *expression=algo_parsetotree(queue);
@@ -367,6 +368,10 @@ int main(){
     printf("\n");
     expression=algo_sort(expression);
     expr_print(expression);
+    printf("\n");
+    expression=expr_peval(expression);
+    expr_print(expression);
+    printf("\n");
     struct Vars **vars=malloc(sizeof(struct Vars*));
     vars[0]=malloc(sizeof(struct Vars));
     vars[0]->var='x';

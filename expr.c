@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
+#include"algo.h"
 #define EXPR_VAR -2
 #define EXPR_NUM -1
 #define EXPR_LBRACE 0
@@ -112,14 +113,25 @@ struct Expr *expr_diff(struct Expr *func){
     return ret;
 }
 double expr_cmp(struct Expr *a,struct Expr *b){
-    if(a->type!=b->type)return a->type-b->type;
-    if(a->len!=b->len)return a->len-b->len;
-    if(a->type<0)return a->data.num-b->data.num;
+    if(a->type!=b->type){
+        return a->type-b->type;
+    }
+    if(a->len!=b->len){
+        return a->len-b->len;
+    }
+    if(a->type==EXPR_NUM){
+        return a->data.num-b->data.num;
+    }
+    if(a->type==EXPR_VAR){
+        return a->data.var-b->data.var;
+    }
     unsigned int i;
     double j;
     for(i=0;i<a->len;++i){
         j=expr_cmp(a->data.nodes[i],b->data.nodes[i]);
-        if(j)return j;
+        if(j){
+            return j;
+        }
     }
     return 0;
 }
@@ -128,7 +140,10 @@ void expr_print(struct Expr *node){
 	unsigned int i;
 	switch(node->type){
 		case EXPR_VAR:printf("%c",node->data.var);return;
-		case EXPR_NUM:printf("%f",node->data.num);return;
+		case EXPR_NUM:
+		    if(node->data.num==(int)node->data.num)printf("%d",(int)node->data.num);
+		    else printf("%f",node->data.num);
+		    return;
 		case EXPR_SUB:printf("(");expr_print(node->data.nodes[0]);printf(")-(");expr_print(node->data.nodes[1]);printf(")");break;
 		case EXPR_DIV:printf("(");expr_print(node->data.nodes[0]);printf(")/(");expr_print(node->data.nodes[1]);printf(")");break;
         case EXPR_ROOT:printf("(");expr_print(node->data.nodes[0]);printf(")root(");expr_print(node->data.nodes[1]);printf(")");break;
@@ -257,4 +272,64 @@ double expr_eval(struct Expr *node,struct Vars **variables,unsigned int n){
 			printf("help\n");
 			return 0;
     }
+}
+int expr_peval_double(struct Expr *node){
+    if(node->type==EXPR_NUM)return 1;
+    if(node->type==EXPR_VAR)return 0;
+    unsigned int i;
+    for(i=0;i<node->len;++i){
+        if(!expr_peval_double(node->data.nodes[i]))return 0;
+    }
+    return 1;
+}
+int expr_peval_int(struct Expr *node){
+    if(node->type==EXPR_NUM)return node->data.num==(int)node->data.num;
+    if(node->type==EXPR_VAR)return 0;
+    unsigned int i;
+    for(i=0;i<node->len;++i){
+        if(!expr_peval_double(node->data.nodes[i]))return 0;
+    }
+    return 1;
+}
+struct Expr *expr_peval(struct Expr *node){
+    if(node->type<EXPR_LBRACE)return node;
+    unsigned int i;
+    for(i=0;i<node->len;++i)node->data.nodes[i]=expr_peval(node->data.nodes[i]);
+    if(!expr_peval_double(node)){
+        if(node->type!=EXPR_ADD&&node->type!=EXPR_MUL)return node;
+        algo_sort(node);
+        for(i=0;i<node->len;++i){
+            if(!expr_peval_double(node->data.nodes[i]))break;
+        }
+        if(i==node->len)return node;
+        --i;
+        struct Expr *newnode=malloc(sizeof(struct Expr));
+        newnode->len=node->len-i;
+        newnode->data.nodes=node->data.nodes+i;
+        newnode->type=node->type;
+        node->len=i;
+        double tmp;
+        tmp=expr_eval(node,NULL,0);
+        expr_free(node);
+        node=expr_add(expr_num(tmp),newnode);
+        expr_print(node);
+        printf("\n");
+        return node;
+    }
+    double tmp;
+    switch(node->type){
+        case EXPR_ADD:
+        case EXPR_SUB:
+        case EXPR_MUL:
+            break;
+        case EXPR_EXP:
+            if(!expr_peval_int(node->data.nodes[1]))return node;
+            break;
+        default:
+            return node;//check if div,exp,float,log, does not produce infinite decimal
+    }
+    tmp=expr_eval(node,NULL,0);
+    expr_free(node);
+    node=expr_num(tmp);
+    return node;
 }
