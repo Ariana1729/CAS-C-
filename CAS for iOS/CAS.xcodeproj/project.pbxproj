@@ -12,6 +12,9 @@
 		ED3ACC94212E521E0009ECDB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED3ACC92212E521E0009ECDB /* Main.storyboard */; };
 		ED3ACC96212E52240009ECDB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ED3ACC95212E52240009ECDB /* Assets.xcassets */; };
 		ED3ACC99212E52240009ECDB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED3ACC97212E52240009ECDB /* LaunchScreen.storyboard */; };
+		ED3ACCA7212E6F090009ECDB /* algo.c in Sources */ = {isa = PBXBuildFile; fileRef = ED3ACCA2212E6F080009ECDB /* algo.c */; };
+		ED3ACCA8212E6F090009ECDB /* expr.c in Sources */ = {isa = PBXBuildFile; fileRef = ED3ACCA3212E6F080009ECDB /* expr.c */; };
+		ED3ACCA9212E6F090009ECDB /* simplify.c in Sources */ = {isa = PBXBuildFile; fileRef = ED3ACCA6212E6F090009ECDB /* simplify.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +25,13 @@
 		ED3ACC95212E52240009ECDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ED3ACC98212E52240009ECDB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED3ACC9A212E52240009ECDB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ED3ACCA0212E6F070009ECDB /* CAS for iOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CAS for iOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		ED3ACCA1212E6F080009ECDB /* algo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = algo.h; path = ../../algo.h; sourceTree = "<group>"; };
+		ED3ACCA2212E6F080009ECDB /* algo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = algo.c; path = ../../algo.c; sourceTree = "<group>"; };
+		ED3ACCA3212E6F080009ECDB /* expr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = expr.c; path = ../../expr.c; sourceTree = "<group>"; };
+		ED3ACCA4212E6F090009ECDB /* simplify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = simplify.h; path = ../../simplify.h; sourceTree = "<group>"; };
+		ED3ACCA5212E6F090009ECDB /* expr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = expr.h; path = ../../expr.h; sourceTree = "<group>"; };
+		ED3ACCA6212E6F090009ECDB /* simplify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = simplify.c; path = ../../simplify.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,10 +66,17 @@
 			children = (
 				ED3ACC8E212E521E0009ECDB /* AppDelegate.swift */,
 				ED3ACC90212E521E0009ECDB /* ViewController.swift */,
+				ED3ACCA2212E6F080009ECDB /* algo.c */,
+				ED3ACCA1212E6F080009ECDB /* algo.h */,
+				ED3ACCA3212E6F080009ECDB /* expr.c */,
+				ED3ACCA5212E6F090009ECDB /* expr.h */,
+				ED3ACCA6212E6F090009ECDB /* simplify.c */,
+				ED3ACCA4212E6F090009ECDB /* simplify.h */,
 				ED3ACC92212E521E0009ECDB /* Main.storyboard */,
 				ED3ACC95212E52240009ECDB /* Assets.xcassets */,
 				ED3ACC97212E52240009ECDB /* LaunchScreen.storyboard */,
 				ED3ACC9A212E52240009ECDB /* Info.plist */,
+				ED3ACCA0212E6F070009ECDB /* CAS for iOS-Bridging-Header.h */,
 			);
 			path = "CAS for iOS";
 			sourceTree = "<group>";
@@ -96,6 +113,7 @@
 				TargetAttributes = {
 					ED3ACC8A212E521E0009ECDB = {
 						CreatedOnToolsVersion = 9.4;
+						LastSwiftMigration = 0940;
 					};
 				};
 			};
@@ -135,7 +153,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ED3ACCA7212E6F090009ECDB /* algo.c in Sources */,
 				ED3ACC91212E521E0009ECDB /* ViewController.swift in Sources */,
+				ED3ACCA8212E6F090009ECDB /* expr.c in Sources */,
+				ED3ACCA9212E6F090009ECDB /* simplify.c in Sources */,
 				ED3ACC8F212E521E0009ECDB /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -280,6 +301,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 2MNM6PUQP4;
 				INFOPLIST_FILE = "CAS for iOS/Info.plist";
@@ -289,6 +311,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.limwernjie.CAS-for-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "CAS for iOS/CAS for iOS-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -298,6 +322,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 2MNM6PUQP4;
 				INFOPLIST_FILE = "CAS for iOS/Info.plist";
@@ -307,6 +332,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.limwernjie.CAS-for-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "CAS for iOS/CAS for iOS-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
