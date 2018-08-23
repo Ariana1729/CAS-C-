@@ -126,7 +126,7 @@ struct Queue *algo_parsetorpn(char *input){
                 }
                 j/=pow(10,i-k-1);
             }
-            algo_queuepush(&output,algo_newtoken(-1,expr_num(j)));
+            algo_queuepush(&output,algo_newtoken(EXPR_NUM,expr_num(j)));
             --i;
             prevop=0;
             continue;
@@ -172,7 +172,7 @@ struct Queue *algo_parsetorpn(char *input){
             continue;
         }
         if(k==EXPR_VAR){
-            algo_queuepush(&output,algo_newtoken(-2,expr_var(input[i])));
+            algo_queuepush(&output,algo_newtoken(EXPR_VAR,expr_var(input[i])));
             prevop=0;
             continue;
         }
@@ -262,13 +262,11 @@ struct Expr *algo_parsetotree(struct Queue *rpn){
     return hold->token->node;
 }//convert to syntax tree
 int algo_sort_qsortcmp(const void *a,const void *b){
-    struct Expr *tmpa=*(struct Expr **)a;
-    struct Expr *tmpb=*(struct Expr **)b;
-    int ret=expr_cmp(*(struct Expr **)a,*(struct Expr **)b)>0;
-    return ret;
+    return expr_cmp(*(struct Expr **)a,*(struct Expr **)b)>0;
 }
 struct Expr *algo_sort(struct Expr *node){
     if(node->type<EXPR_LBRACE)return node;
+    if(node->type>=EXPR_EXP)return node;
     unsigned int i;
     for(i=0;i<node->len;++i){
         node->data.nodes[i]=algo_sort(node->data.nodes[i]);
@@ -349,27 +347,50 @@ struct Expr *algo_expandfull(struct Expr *node){
     expr_free(tmp);
     return node;
 }
+double algo_polynomial_exp(struct Expr *node,struct Expr *var){
+    unsigned int i;
+    if(node->type==EXPR_NUM)return 0;
+    if(node->type==EXPR_VAR){
+        if(node->data.var==var->data.var)return 1;
+        return 0;
+    }
+    for(i=0;i<node->len;++i){
+        if(!expr_cmp(node->data.nodes[i],var))return 1;
+    }
+    for(i=0;i<node->len;++i){
+        if(node->data.nodes[i]->type!=EXPR_EXP)continue;
+        if(!expr_cmp(node->data.nodes[i]->data.nodes[0],var))return node->data.nodes[i]->data.nodes[1]->data.num;
+    }
+    return 0;
+}//handle non-int?
 struct Expr *algo_polynomial(struct Expr *node,struct Expr *var){
-
+    if(node->type!=EXPR_ADD&&node->type!=EXPR_SUB)return node;
+    unsigned int i,j;
+    node=algo_expandfull(node);//fully expand
+    for(i=0;i<node->len;++i){
+        node->data.nodes[i]=simplify_colm(node->data.nodes[i]);
+    }//converts everything into exponential form
+    node=expr_peval(node);
+    node=simplify_cola(node);
+    node=expr_peval(node);
+    if(node->type!=EXPR_ADD&&node->type!=EXPR_SUB)return node;
+    int algo_polynomial_tmpfunc(const void *a,const void *b){
+        return algo_polynomial_exp((*(struct Expr **)a),var)>algo_polynomial_exp((*(struct Expr **)b),var);
+    };
+    qsort(node->data.nodes,node->len,sizeof(struct Expr*),algo_polynomial_tmpfunc);
     return node;
 }//converts to a polynomial in var
 struct Expr *algo_differentiate(struct Expr *node,struct Expr *var){
     return node;
 }//differentate wrt var
 int main(){
-    struct Queue *queue=algo_parsetorpn("3*(1+2)*(2+6+3)+log_(x)4+5root24");
+    struct Queue *queue=algo_parsetorpn("3+4+x*x+5*x-x^5+2.5x^2");
     algo_printqueue(queue);
     printf("\n");
     struct Expr *expression=algo_parsetotree(queue);
     expr_print(expression);
     printf("\n");
-    expression=algo_expandfull(expression);
-    expr_print(expression);
-    printf("\n");
-    expression=algo_sort(expression);
-    expr_print(expression);
-    printf("\n");
-    expression=expr_peval(expression);
+    expression=algo_polynomial(expression,expr_var('x'));
     expr_print(expression);
     printf("\n");
     struct Vars **vars=malloc(sizeof(struct Vars*));

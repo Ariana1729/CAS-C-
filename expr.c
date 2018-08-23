@@ -1,9 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
+#include"simplify.h"
 #include"algo.h"
-#define EXPR_VAR -2
-#define EXPR_NUM -1
+#define EXPR_NUM (-2)
+#define EXPR_VAR (-1)
 #define EXPR_LBRACE 0
 #define EXPR_RBRACE 1
 #define EXPR_ADD 2
@@ -27,18 +28,18 @@ struct Vars{
     char var;
     double num;
 };
+struct Expr *expr_num(double num){
+    struct Expr *ret=malloc(sizeof(struct Expr));
+    ret->type=EXPR_NUM;
+    ret->len=1;
+    ret->data.num=num;
+    return ret;
+}
 struct Expr *expr_var(char var){
 	struct Expr *ret=malloc(sizeof(struct Expr));
 	ret->type=EXPR_VAR;
 	ret->len=1;
 	ret->data.var=var;
-	return ret;
-}
-struct Expr *expr_num(double num){
-	struct Expr *ret=malloc(sizeof(struct Expr));
-	ret->type=EXPR_NUM;
-	ret->len=1;
-	ret->data.num=num;
 	return ret;
 }
 struct Expr *expr_add(struct Expr *aug,struct Expr *add){
@@ -296,24 +297,42 @@ struct Expr *expr_peval(struct Expr *node){
     unsigned int i;
     for(i=0;i<node->len;++i)node->data.nodes[i]=expr_peval(node->data.nodes[i]);
     if(!expr_peval_double(node)){
-        if(node->type!=EXPR_ADD&&node->type!=EXPR_MUL)return node;
-        algo_sort(node);
-        for(i=0;i<node->len;++i){
-            if(!expr_peval_double(node->data.nodes[i]))break;
+        if(node->type==EXPR_ADD){
+            node=simplify_add(node);
+            node=algo_sort(node);
+            for(i=0;i<node->len;++i){
+                if(!expr_peval_double(node->data.nodes[i]))break;
+            }
+            if(i==node->len||i==0)return node;
+            struct Expr *newnode=malloc(sizeof(struct Expr));
+            newnode->len=node->len-i;
+            newnode->data.nodes=node->data.nodes+i;
+            newnode->type=node->type;
+            node->len=i;
+            double tmp;
+            tmp=expr_eval(node,NULL,0);
+            expr_free(node);
+            node=expr_add(expr_num(tmp),newnode);
+            node=simplify_add(node);
+        }else if(node->type==EXPR_MUL){
+            node=simplify_mul(node);
+            node=algo_sort(node);
+            algo_sort(node);
+            for(i=0;i<node->len;++i){
+                if(!expr_peval_double(node->data.nodes[i]))break;
+            }
+            if(i==node->len||i==0)return node;
+            struct Expr *newnode=malloc(sizeof(struct Expr));
+            newnode->len=node->len-i;
+            newnode->data.nodes=node->data.nodes+i;
+            newnode->type=node->type;
+            node->len=i;
+            double tmp;
+            tmp=expr_eval(node,NULL,0);
+            expr_free(node);
+            node=expr_mul(expr_num(tmp),newnode);
+            node=simplify_mul(node);
         }
-        if(i==node->len)return node;
-        --i;
-        struct Expr *newnode=malloc(sizeof(struct Expr));
-        newnode->len=node->len-i;
-        newnode->data.nodes=node->data.nodes+i;
-        newnode->type=node->type;
-        node->len=i;
-        double tmp;
-        tmp=expr_eval(node,NULL,0);
-        expr_free(node);
-        node=expr_add(expr_num(tmp),newnode);
-        expr_print(node);
-        printf("\n");
         return node;
     }
     double tmp;

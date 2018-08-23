@@ -1,7 +1,7 @@
 #ifndef EXPR_H
 #define EXPR_H
-#define EXPR_VAR -2
-#define EXPR_NUM -1
+#define EXPR_NUM (-2)
+#define EXPR_VAR (-1)
 #define EXPR_LBRACE 0
 #define EXPR_RBRACE 1
 #define EXPR_ADD 2

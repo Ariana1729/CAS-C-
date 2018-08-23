@@ -212,18 +212,20 @@ struct Expr *simplify_colm(struct Expr *node){//simplify collect multiply
                 if(!expr_cmp(node->data.nodes[i],node->data.nodes[j])){
                     expr_cmpfree(node->data.nodes[i],expr_rm(node,j));
                     node->data.nodes[i]=expr_exp(node->data.nodes[i],expr_num(2));
+                    i=j=0;
                 }
                 else if(node->data.nodes[i]->type==EXPR_EXP){
                     if(expr_cmp(node->data.nodes[i]->data.nodes[0],node->data.nodes[j]))continue;
                     expr_cmpfree(node->data.nodes[i]->data.nodes[0],expr_rm(node,j));
                     node->data.nodes[i]->data.nodes[1]=expr_add(node->data.nodes[i]->data.nodes[1],expr_num(1));
+                    i=j=0;
                 }
                 else if(node->data.nodes[j]->type==EXPR_EXP){
                     if(expr_cmp(node->data.nodes[j]->data.nodes[0],node->data.nodes[i]))continue;
                     expr_cmpfree(node->data.nodes[j]->data.nodes[0],expr_rm(node,i));
                     node->data.nodes[j]->data.nodes[1]=expr_add(node->data.nodes[j]->data.nodes[1],expr_num(1));
+                    i=j=0;
                 }
-                i=j=0;
                 continue;
             }
             if(!expr_cmp(node->data.nodes[i]->data.nodes[0],node->data.nodes[j]->data.nodes[0])){
