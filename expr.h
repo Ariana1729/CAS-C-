@@ -36,6 +36,7 @@ struct Expr *expr_root(struct Expr *deg,struct Expr *rad);
 struct Expr *expr_log(struct Expr *base,struct Expr *alog);
 struct Expr *expr_ln(struct Expr *alog);
 double expr_cmp(struct Expr *a,struct Expr *b);
+void expr_swop(struct Expr **a,struct Expr **b);
 void expr_print(struct Expr *node);
 void expr_cmpfree(struct Expr *a,struct Expr *b);
 unsigned int expr_locate(struct Expr *node,struct Expr *ele);
@@ -43,8 +44,4 @@ struct Expr *expr_dup(struct Expr *node);
 struct Expr *expr_rm(struct Expr *node,unsigned int n);
 void expr_del(struct Expr *node,unsigned int n);
 void expr_free(struct Expr *node);
-double expr_eval(struct Expr *node,struct Vars **variables,unsigned int n);
-int expr_peval_double(struct Expr *node);
-int expr_peval_int(struct Expr *node);
-struct Expr *expr_peval(struct Expr *node);
 #endif

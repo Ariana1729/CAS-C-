@@ -26,10 +26,4 @@ struct Token *algo_queuepop(struct Queue **stack);
 void algo_printqueue(struct Queue *queue);
 struct Queue *algo_parsetorpn(char *input);//convert to reverse polish notation
 struct Expr *algo_parsetotree(struct Queue *rpn);//convert to syntax tree
-int algo_sort_qsortcmp(const void *a,const void *b);
-struct Expr *algo_sort(struct Expr *node);//sorts the node
-struct Expr *algo_expand(struct Expr *node);//expands as much as possible
-struct Expr *algo_expandfull(struct Expr *node);
-struct Expr *algo_polynomial(struct Expr *node,struct Expr *var);//converts to a polynomial in var
-struct Expr *algo_differentiate(struct Expr *node,struct Expr *var);//differentate wrt var
 #endif

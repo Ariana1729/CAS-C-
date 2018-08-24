@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdint.h>
 #include<math.h>
 #include"expr.h"
 #include"simplify.h"
@@ -94,6 +95,9 @@ void algo_printqueue(struct Queue *queue){
             case EXPR_LOG:
                 printf("log");
                 break;
+            case EXPR_LN:
+                printf("ln");
+                break;
             default:
                 printf("help");
                 break;
@@ -141,6 +145,7 @@ struct Queue *algo_parsetorpn(char *input){
         else if(input[i]=='^')k=EXPR_EXP;
         else if(input[i]=='r'&&input[i+1]=='o'&&input[i+2]=='o'&&input[i+3]=='t')k=EXPR_ROOT;
         else if(input[i]=='l'&&input[i+1]=='o'&&input[i+2]=='g'&&input[i+3]=='_')k=EXPR_LOG;
+        else if(input[i]=='l'&&input[i+1]=='n')k=EXPR_LN;
         if(i!=0){
             if((input[i]=='('&&input[i-1]==')'&&op->token->type!=EXPR_LOG)||(!prevop&&(k==EXPR_VAR||k==EXPR_LOG))){
                 while(op){
@@ -199,6 +204,8 @@ struct Queue *algo_parsetorpn(char *input){
             case EXPR_LOG:
                 i+=3;
                 break;
+            case EXPR_LN:
+                i+=1;
             default:
                 break;
         }
@@ -228,30 +235,63 @@ struct Expr *algo_parsetotree(struct Queue *rpn){
             algo_stackpush(&hold,tok);
             continue;
         }//tok->type=-1 would be a node
+        if(tok->type==EXPR_LN){
+            hold->token->node=expr_ln(hold->token->node);
+            free(tok);
+            continue;
+        }
         tmpi=tok->type;
         free(tok);
         tok=algo_stackpop(&hold);
         tmpn=tok->node;
         switch(tmpi){
             case EXPR_ADD:
+                if(hold==NULL){
+                    printf("Adding an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_add(hold->token->node,tmpn);
                 break;
             case EXPR_SUB:
+                if(hold==NULL){
+                    printf("Subtraction an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_sub(hold->token->node,tmpn);
                 break;
             case EXPR_MUL:
+                if(hold==NULL){
+                    printf("Multiplying an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_mul(hold->token->node,tmpn);
                 break;
             case EXPR_DIV:
+                if(hold==NULL){
+                    printf("Dividing an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_div(hold->token->node,tmpn);
                 break;
             case EXPR_EXP:
+                if(hold==NULL){
+                    printf("Exponentiation of an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_exp(hold->token->node,tmpn);
                 break;
             case EXPR_ROOT:
+                if(hold==NULL){
+                    printf("Root of an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_root(hold->token->node,tmpn);
                 break;
             case EXPR_LOG:
+                if(hold==NULL){
+                    printf("Log of an invalid expression");
+                    exit(EXIT_FAILURE);
+                }
                 hold->token->node=expr_log(hold->token->node,tmpn);
                 break;
             default:
@@ -261,92 +301,14 @@ struct Expr *algo_parsetotree(struct Queue *rpn){
     }
     return hold->token->node;
 }//convert to syntax tree
-int algo_sort_qsortcmp(const void *a,const void *b){
-    return expr_cmp(*(struct Expr **)a,*(struct Expr **)b)>0;
-}
-struct Expr *algo_sort(struct Expr *node){
-    if(node->type<EXPR_LBRACE)return node;
-    if(node->type>=EXPR_EXP)return node;
+int algo_isconst(struct Expr *node,struct Expr *var){
+    if(node->type==EXPR_NUM)return 1;
+    if(node->type==EXPR_VAR)return node->data.var==var->data.var;
     unsigned int i;
     for(i=0;i<node->len;++i){
-        node->data.nodes[i]=algo_sort(node->data.nodes[i]);
+        if(!algo_isconst(node->data.nodes[i],var))return 0;
     }
-    qsort(node->data.nodes,node->len,sizeof(struct Expr*),algo_sort_qsortcmp);
-    return node;
-}//sorts the node
-struct Expr *algo_expand(struct Expr *node){
-    node=simplify_single(node);
-    struct Expr *tmp;
-    switch(node->type){
-        case EXPR_ADD:
-            tmp=expr_dup(node);
-            node=simplify_add(node);
-            while(expr_cmp(tmp,node)){
-                expr_free(tmp);
-                node=simplify_add(node);
-                tmp=expr_dup(node);
-            }
-            expr_free(tmp);
-            break;
-        case EXPR_SUB:
-            node=simplify_sub(node);
-            break;
-        case EXPR_MUL:
-            tmp=expr_dup(node);
-            node=simplify_mul(node);
-            while(expr_cmp(tmp,node)){
-                expr_free(tmp);
-                node=simplify_mul(node);
-                tmp=expr_dup(node);
-            }
-            expr_free(tmp);
-            break;
-        case EXPR_DIV:
-            node=simplify_div(node);
-            break;
-        default:
-            return node;
-    }
-    if(node->type==EXPR_EXP){
-        node=simplify_expandm(node);
-        tmp=expr_dup(node);
-        node=simplify_mul(node);
-        while(expr_cmp(tmp,node)){
-            expr_free(tmp);
-            node=simplify_mul(node);
-            tmp=expr_dup(node);
-        }
-        expr_free(tmp);
-    }
-    if(node->type==EXPR_MUL){
-        node=simplify_expanda(node);
-        tmp=expr_dup(node);
-        node=simplify_add(node);
-        while(expr_cmp(tmp,node)){
-            expr_free(tmp);
-            node=simplify_add(node);
-            tmp=expr_dup(node);
-        }
-        expr_free(tmp);
-    }
-    unsigned int i;
-    if(node->type<EXPR_LBRACE)return node;
-    for(i=0;i<node->len;++i){
-        node->data.nodes[i]=algo_expand(node->data.nodes[i]);
-    }
-    return node;
-}//expands as much as possible
-struct Expr *algo_expandfull(struct Expr *node){
-    struct Expr *tmp;
-    tmp=expr_dup(node);
-    node=algo_expand(node);
-    while(expr_cmp(tmp,node)){
-        expr_free(tmp);
-        node=algo_expand(node);
-        tmp=expr_dup(node);
-    }
-    expr_free(tmp);
-    return node;
+    return 1;//check if node is const wrt var
 }
 double algo_polynomial_exp(struct Expr *node,struct Expr *var){
     unsigned int i;
@@ -363,18 +325,27 @@ double algo_polynomial_exp(struct Expr *node,struct Expr *var){
         if(!expr_cmp(node->data.nodes[i]->data.nodes[0],var))return node->data.nodes[i]->data.nodes[1]->data.num;
     }
     return 0;
-}//handle non-int?
+}//handle non-double?
 struct Expr *algo_polynomial(struct Expr *node,struct Expr *var){
     if(node->type!=EXPR_ADD&&node->type!=EXPR_SUB)return node;
     unsigned int i,j;
-    node=algo_expandfull(node);//fully expand
+    node=simplify_expand(node);//fully expand
     for(i=0;i<node->len;++i){
         node->data.nodes[i]=simplify_colm(node->data.nodes[i]);
     }//converts everything into exponential form
-    node=expr_peval(node);
+    node=simplify_peval(node);
     node=simplify_cola(node);
-    node=expr_peval(node);
+    node=simplify_peval(node);
     if(node->type!=EXPR_ADD&&node->type!=EXPR_SUB)return node;
+    for(i=0;i<node->len;++i){
+        if(node->data.nodes[i]->type<EXPR_LBRACE)continue;
+        for(j=0;j<node->data.nodes[i]->len;++j){
+            if(node->data.nodes[i]->data.nodes[j]->type!=EXPR_EXP)continue;
+            if(!expr_cmp(node->data.nodes[i]->data.nodes[j]->data.nodes[0],var))break;
+        }
+        if(j>=node->data.nodes[i]->len-1)continue;
+        expr_swop(&node->data.nodes[i]->data.nodes[j],&node->data.nodes[i]->data.nodes[node->data.nodes[i]->len-1]);
+    }
     int algo_polynomial_tmpfunc(const void *a,const void *b){
         return algo_polynomial_exp((*(struct Expr **)a),var)>algo_polynomial_exp((*(struct Expr **)b),var);
     };
@@ -425,42 +396,47 @@ struct Expr *algo_differentiate(struct Expr *node,struct Expr *var){
             return tmp;
         case EXPR_ROOT:
             tmp=expr_exp(node->data.nodes[0],expr_div(expr_num(1),node->data.nodes[1]));
-            expr_free(node);
+            free(node);
             return tmp;
         case EXPR_LOG:
             tmp=algo_differentiate(expr_div(expr_ln(node->data.nodes[0]),expr_ln(node->data.nodes[1])),var);
-            expr_free(node);
+            free(node);
             return tmp;
         case EXPR_LN:
             tmp=expr_div(algo_differentiate(node->data.nodes[0],var),node->data.nodes[0]);
-            expr_free(node);
+            free(node);
             return tmp;
         default:
             printf("help in expr_differentiate");
             break;
     }
     return node;
-}//differentate wrt var,maybe impliment chain rule easier?
+}//differentate wrt var,maybe implement chain rule easier?
 int main(){
-    struct Queue *queue=algo_parsetorpn("3+4+x*x+5*x-x^5+2.5x^2");
+    struct Queue *queue=algo_parsetorpn("3+4+x*x^2^2+5*x-x^5+2.5x^2+3*5*x*5*x^4+log_5(x)");
+    printf("Reverse Polish notation:\n");
     algo_printqueue(queue);
     printf("\n");
     struct Expr *expression=algo_parsetotree(queue);
-    expr_print(expression);
-    printf("\n");
     expression=algo_polynomial(expression,expr_var('x'));
-    expr_print(expression);
-    printf("\n");
-    expression=algo_differentiate(expression,expr_var('x'));
-    expr_print(expression);
-    printf("\n");
+    printf("Simplified expression\n");
+    expr_print(expression);printf("\n");
+    expr_swop(&expression->data.nodes[0],&expression->data.nodes[1]);
+    expr_print(expression);printf("\n");
+    printf("\n%d\n",algo_isconst(expression,expr_var('x')));
+    struct Expr *test=expr_mul(expr_num(5),expr_ln(expr_exp(expr_var('x'),expr_num(3))));
+    expr_print(test);printf("\n");
+    test=simplify_expand(test);
+    expr_print(test);printf("\n");
+    /*expression=algo_differentiate(expression,expr_var('x'));
     expression=algo_polynomial(expression,expr_var('x'));
+    printf("Differentiated:\n");
     expr_print(expression);
     printf("\n");
     struct Vars **vars=malloc(sizeof(struct Vars*));
     vars[0]=malloc(sizeof(struct Vars));
     vars[0]->var='x';
     vars[0]->num=5;
-    printf("%f\n",expr_eval(expression,vars,1));
+    printf("%f\n",simplify_eval(expression,vars,1));*/
     return 0;
 }

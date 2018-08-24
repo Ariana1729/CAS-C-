@@ -1,8 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdint.h>
+#include<math.h>
 #include"expr.h"
 struct Expr *simplify_single(struct Expr *node){
-    if(node->len!=1||node->type<0||node->type!=EXPR_LN)return node;
+    if(node->len!=1||node->type<0||node->type==EXPR_LN)return node;
     free(node);
     node=node->data.nodes[0];
     return node;
@@ -27,12 +29,17 @@ struct Expr *simplify_add(struct Expr *node){
         node->data.nodes=tmp;
         for(j=tmp[i]->len-1;j>0;--j)tmp[node->len-j]=tmp[i]->data.nodes[j];
         tmp[i]=tmp[i]->data.nodes[j];
+        for(i=0;i<node->len;++i){
+            if(expr_cmp(node->data.nodes[i],expr_num(0)))continue;
+            expr_rm(node,i);
+            --i;
+        }
 	}
 	return node;
 }// +(+(a,b),c)...=+(a,b,c)
 struct Expr *simplify_sub(struct Expr *node){
     if(node->type!=EXPR_SUB)return node;
-    node->type=2;
+    node->type=EXPR_ADD;
 	node->data.nodes[1]=expr_mul(expr_num(-1),node->data.nodes[1]);
 	return node;
 }// -(a,b)=+(a,*(-1,b))
@@ -72,10 +79,49 @@ struct Expr *simplify_mul(struct Expr *node){
 }// *(*(a,b),c)=*(a,b,c)
 struct Expr *simplify_div(struct Expr *node){
     if(node->type!=EXPR_DIV)return node;
-	node->type=4;
+	node->type=EXPR_MUL;
 	node->data.nodes[1]=expr_exp(node->data.nodes[1],expr_num(-1));
 	return node;
 }// /(a,b)=*(a,^(b,-1))
+struct Expr *simplify_root(struct Expr *node){
+    if(node->type!=EXPR_ROOT)return node;
+    node->data.nodes[0]=(struct Expr *)((uintptr_t)node->data.nodes[0]^(uintptr_t)node->data.nodes[1]);
+    node->data.nodes[1]=(struct Expr *)((uintptr_t)node->data.nodes[0]^(uintptr_t)node->data.nodes[1]);
+    node->data.nodes[0]=(struct Expr *)((uintptr_t)node->data.nodes[0]^(uintptr_t)node->data.nodes[1]);
+    node->data.nodes[1]=expr_div(expr_num(1),node->data.nodes[1]);
+    node->type=EXPR_EXP;
+    return node;
+}// a root b=b^1/a
+struct Expr *simplify_log(struct Expr *node){
+    if(node->type!=EXPR_LOG)return node;
+    node->data.nodes[0]=(struct Expr *)((uintptr_t)node->data.nodes[0]^(uintptr_t)node->data.nodes[1]);
+    node->data.nodes[1]=(struct Expr *)((uintptr_t)node->data.nodes[0]^(uintptr_t)node->data.nodes[1]);
+    node->data.nodes[0]=(struct Expr *)((uintptr_t)node->data.nodes[0]^(uintptr_t)node->data.nodes[1]);
+    node->data.nodes[0]=expr_ln(node->data.nodes[0]);
+    node->data.nodes[1]=expr_ln(node->data.nodes[1]);
+    node->type=EXPR_DIV;
+    return node;
+}// log_a(b)=ln(b)/ln(a)
+struct Expr *simplify_ln(struct Expr *node){
+    if(node->type!=EXPR_LN)return node;
+    if(node->data.nodes[0]->type==EXPR_MUL){
+        struct Expr *tmp=node;
+        node=node->data.nodes[0];
+        free(tmp);
+        node->type=EXPR_ADD;
+        unsigned int i;
+        for(i=0;i<node->len;++i){
+            node->data.nodes[i]=expr_ln(node->data.nodes[i]);
+        }
+    }else if(node->data.nodes[0]->type==EXPR_EXP){
+        node->data.nodes[0]->type=EXPR_MUL;//ln(a*b)
+        struct Expr *tmp=node->data.nodes[0];//a*b
+        node->data.nodes[0]=node->data.nodes[0]->data.nodes[0];//ln(a)
+        tmp->data.nodes[0]=node;//ln(a)*b
+        node=tmp;
+    }
+    return node;
+}// ln(a*b)=ln(a)+ln(b),ln(a^b)=b*ln(a)
 struct Expr *simplify_expanda(struct Expr *node){//simplify expand add
     if(node->type!=EXPR_MUL)return node;
     unsigned int i;
@@ -256,46 +302,208 @@ struct Expr *simplify_colm(struct Expr *node){//simplify collect multiply
 	}
 	return node;
 }//*(^(a,b),^(a,c),x)=*(^(a,+(b,c)),x) *(^(a,b),a,x)=*(^(a,+(b,1)),x)
+struct Expr *simplify_repfunc(struct Expr *node,struct Expr *(*func)(struct Expr *)){
+    struct Expr *tmp=expr_dup(node);
+    node=(*func)(node);
+    while(expr_cmp(tmp,node)){
+        expr_free(tmp);
+        node=(*func)(node);
+        tmp=expr_dup(node);
+    }
+    expr_free(tmp);
+    return node;
+}
+int simplify_sort_qsortcmp(const void *a, const void *b){
+    return expr_cmp(*(struct Expr **)a,*(struct Expr **)b)>0;
+}
+struct Expr *simplify_sort(struct Expr *node){
+    if(node->type<EXPR_LBRACE)return node;
+    if(node->type>=EXPR_EXP)return node;
+    unsigned int i;
+    for(i=0;i<node->len;++i){
+        node->data.nodes[i]= simplify_sort(node->data.nodes[i]);
+    }
+    qsort(node->data.nodes, node->len, sizeof(struct Expr *), simplify_sort_qsortcmp);
+    return node;
+}//sorts the node
+double simplify_eval(struct Expr *node, struct Vars **variables, unsigned int n){
+    unsigned int i;
+    double res;
+    switch(node->type){
+        case EXPR_VAR:
+            for(i=0;i<n;++i){
+                if(node->data.var==variables[i]->var)return variables[i]->num;
+            }
+            return 0;
+        case EXPR_NUM:return node->data.num;
+        case EXPR_ADD:
+            res=0;
+            for(i=0;i<node->len;++i){
+                res+= simplify_eval(node->data.nodes[i], variables, n);
+            }
+            return res;
+        case EXPR_SUB:
+            return simplify_eval(node->data.nodes[0], variables, n)- simplify_eval(node->data.nodes[1], variables, n);
+        case EXPR_MUL:
+            res=1;
+            for(i=0;i<node->len;++i){
+                res*=simplify_eval(node->data.nodes[i], variables, n);
+            }
+            return res;
+        case EXPR_DIV:
+            return simplify_eval(node->data.nodes[0], variables, n)/ simplify_eval(node->data.nodes[1], variables, n);
+        case EXPR_EXP:
+            return pow(simplify_eval(node->data.nodes[0], variables, n), simplify_eval(node->data.nodes[1], variables, n));
+        case EXPR_ROOT:
+            return pow(simplify_eval(node->data.nodes[0], variables, n),1/ simplify_eval(node->data.nodes[1], variables, n));
+        case EXPR_LOG:
+            return log(simplify_eval(node->data.nodes[1], variables, n))/log(simplify_eval(node->data.nodes[0], variables, n));
+        case EXPR_LN:
+            return log(simplify_eval(node->data.nodes[0], variables, n));
+        default:
+            printf("help in simplify_eval\n");
+            return 0;
+    }
+}
+int simplify_peval_double(struct Expr *node){
+    if(node->type==EXPR_NUM)return 1;
+    if(node->type==EXPR_VAR)return 0;
+    if(node->type==EXPR_ROOT)return 0;
+    if(node->type==EXPR_LOG)return 0;
+    if(node->type==EXPR_LN)return 0;
+    unsigned int i;
+    for(i=0;i<node->len;++i){
+        if(!simplify_peval_double(node->data.nodes[i]))return 0;
+    }
+    return 1;
+}
+int simplify_peval_int(struct Expr *node){
+    if(node->type==EXPR_NUM)return node->data.num==(int)node->data.num;
+    if(node->type==EXPR_VAR)return 0;
+    if(node->type==EXPR_ROOT)return 0;
+    if(node->type==EXPR_LOG)return 0;
+    if(node->type==EXPR_LN)return 0;
+    unsigned int i;
+    for(i=0;i<node->len;++i){
+        if(!simplify_peval_double(node->data.nodes[i]))return 0;
+    }
+    return 1;
+}
+struct Expr *simplify_peval(struct Expr *node){
+    if(node->type<EXPR_LBRACE)return node;
+    unsigned int i;
+    for(i=0;i<node->len;++i)node->data.nodes[i]= simplify_peval(node->data.nodes[i]);
+    if(!simplify_peval_double(node)){
+        if(node->type==EXPR_ADD){
+            node=simplify_add(node);
+            if(node->type!=EXPR_ADD)return simplify_peval(node);
+            for(i=0;i<node->len;++i){
+                if(!simplify_peval_double(node->data.nodes[i]))break;
+            }
+            if(i==node->len||i==0)return node;
+            struct Expr *newnode=malloc(sizeof(struct Expr));
+            newnode->len=node->len-i;
+            newnode->data.nodes=node->data.nodes+i;
+            newnode->type=node->type;
+            node->len=i;
+            double tmp;
+            tmp=simplify_eval(node,NULL,0);
+            expr_free(node);
+            node=expr_add(expr_num(tmp),newnode);
+            node=simplify_add(node);
+        }else if(node->type==EXPR_MUL){
+            node=simplify_mul(node);
+            if(node->type!=EXPR_MUL)return simplify_peval(node);
+            for(i=0;i<node->len;++i){
+                if(!simplify_peval_double(node->data.nodes[i]))break;
+            }
+            if(i==node->len||i==0)return node;
+            struct Expr *newnode=malloc(sizeof(struct Expr));
+            newnode->len=node->len-i;
+            newnode->data.nodes=node->data.nodes+i;
+            newnode->type=node->type;
+            node->len=i;
+            double tmp;
+            tmp=simplify_eval(node,NULL,0);
+            expr_free(node);
+            node=expr_mul(expr_num(tmp),newnode);
+            node=simplify_mul(node);
+        }
+        return node;
+    }
+    double tmp;
+    switch(node->type){
+        case EXPR_ADD:
+        case EXPR_SUB:
+        case EXPR_MUL:
+            if(!simplify_peval_double(node->data.nodes[1]))return node;
+            break;
+        case EXPR_EXP:
+            if(!simplify_peval_int(node->data.nodes[1]))return node;
+            break;
+        case EXPR_DIV:
+        case EXPR_ROOT:
+        case EXPR_LOG:
+        case EXPR_LN:
+            return node;
+        default:
+            return node;//check if div,exp,float,log, does not produce infinite decimal
+    }
+    node=expr_num(simplify_eval(node,NULL,0));
+    return node;
+}
+struct Expr *simplify_expand_func(struct Expr *node){
+    if(node->type<EXPR_LBRACE)return node;
+    node=simplify_repfunc(node,simplify_single);
+    switch(node->type){
+        case(EXPR_ADD):
+            simplify_repfunc(node,simplify_add);
+            break;
+        case(EXPR_SUB):
+            node=simplify_sub(node);
+            break;
+        case(EXPR_MUL):
+            simplify_repfunc(node,simplify_mul);
+            break;
+        case(EXPR_DIV):
+            node=simplify_div(node);
+            break;
+        case(EXPR_ROOT):
+            node=simplify_root(node);
+            break;
+        case(EXPR_LOG):
+            node=simplify_log(node);
+            break;
+        case(EXPR_LN):
+            node=simplify_ln(node);
+            break;
+        default:
+            break;
+    }
+    if(node->type==EXPR_EXP){
+        node=simplify_expandm(node);
+    }
+    if(node->type==EXPR_MUL){
+        node=simplify_expanda(node);
+    }
+    node=simplify_peval(simplify_sort(node));
+    if(node->type<EXPR_LBRACE)return node;
+    unsigned int i;
+    for(i=0;i<node->len;++i){
+        node->data.nodes[i]=simplify_expand_func(node->data.nodes[i]);
+    }
+    return node;
+}
+struct Expr *simplify_expand(struct Expr *node){
+    return simplify_repfunc(node,simplify_expand_func);
+}
 /*int main(){
-	struct Expr *tmp1=expr_add(simplify_mul(expr_mul(expr_num(1),expr_mul(expr_num(2),expr_num(3)))),expr_mul(expr_num(1),expr_num(4)));
-    expr_print(tmp1);
-    printf("\n");
-    simplify_cola(tmp1);
-    expr_print(tmp1);
-    printf("\n");
-    tmp1=simplify_single(tmp1);
-    tmp1=simplify_expanda(tmp1);
-    expr_print(tmp1);
-    printf("\n");
-    simplify_colan(tmp1,tmp1->data.nodes[1]->data.nodes[1]);
-    expr_print(tmp1);
-    printf("\n");
-    printf("%f\n",expr_eval(tmp1,NULL,0));
-    struct Expr *tmp2=expr_mul(expr_mul(expr_exp(expr_num(4),expr_add(expr_num(2),expr_num(3))),expr_exp(expr_num(5),expr_num(3))),expr_exp(expr_num(5),expr_num(2)));
-    simplify_mul(tmp2);
-	expr_print(tmp2);
-    printf("\n");
-    simplify_colm(tmp2);
-    expr_print(tmp2);
-    printf("\n");
-    tmp2=simplify_single(tmp2);
-    tmp2=simplify_expanda(tmp2);
-    expr_print(tmp2);
-    printf("\n");
-    printf("%f\n",expr_eval(tmp2,NULL,0));
-    struct Expr *tmp3=expr_mul(expr_exp(expr_num(3),expr_num(4)),expr_mul(expr_num(5),expr_num(3)));
-    simplify_mul(tmp3);
-    expr_print(tmp3);
-    printf("\n");
-    simplify_colm(tmp3);
-    expr_print(tmp3);
-    printf("\n");
-    struct Expr *tmp4=expr_mul(expr_num(1),expr_num(2));
-    expr_del(tmp4,1);
-    tmp4=expr_add(tmp4,tmp4);
-    expr_print(tmp4);
-    printf("\n");
-    simplify_cola(tmp4);
-    expr_print(tmp4);
+	struct Expr *test=expr_mul(expr_num(1),expr_div(expr_var('s'),expr_num(5)));
+	expr_rm(test,0);
+    expr_print(test);printf("\n");
+    test=simplify_expand(test);
+    expr_print(test);printf("\n");
+    test=expr_peval(test);
+    expr_print(test);printf("\n");
 	return 0;
 }*/
