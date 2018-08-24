@@ -12,9 +12,9 @@
 		ED3ACC94212E521E0009ECDB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED3ACC92212E521E0009ECDB /* Main.storyboard */; };
 		ED3ACC96212E52240009ECDB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ED3ACC95212E52240009ECDB /* Assets.xcassets */; };
 		ED3ACC99212E52240009ECDB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED3ACC97212E52240009ECDB /* LaunchScreen.storyboard */; };
-		ED3ACCA7212E6F090009ECDB /* algo.c in Sources */ = {isa = PBXBuildFile; fileRef = ED3ACCA2212E6F080009ECDB /* algo.c */; };
-		ED3ACCA8212E6F090009ECDB /* expr.c in Sources */ = {isa = PBXBuildFile; fileRef = ED3ACCA3212E6F080009ECDB /* expr.c */; };
-		ED3ACCA9212E6F090009ECDB /* simplify.c in Sources */ = {isa = PBXBuildFile; fileRef = ED3ACCA6212E6F090009ECDB /* simplify.c */; };
+		EDA9583C212FA29B005FD7DD /* algo.c in Sources */ = {isa = PBXBuildFile; fileRef = EDA95835212FA29B005FD7DD /* algo.c */; };
+		EDA9583D212FA29B005FD7DD /* expr.c in Sources */ = {isa = PBXBuildFile; fileRef = EDA95836212FA29B005FD7DD /* expr.c */; };
+		EDA9583E212FA29B005FD7DD /* simplify.c in Sources */ = {isa = PBXBuildFile; fileRef = EDA9583A212FA29B005FD7DD /* simplify.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,12 +26,12 @@
 		ED3ACC98212E52240009ECDB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED3ACC9A212E52240009ECDB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		ED3ACCA0212E6F070009ECDB /* CAS for iOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CAS for iOS-Bridging-Header.h"; sourceTree = "<group>"; };
-		ED3ACCA1212E6F080009ECDB /* algo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = algo.h; path = ../../algo.h; sourceTree = "<group>"; };
-		ED3ACCA2212E6F080009ECDB /* algo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = algo.c; path = ../../algo.c; sourceTree = "<group>"; };
-		ED3ACCA3212E6F080009ECDB /* expr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = expr.c; path = ../../expr.c; sourceTree = "<group>"; };
-		ED3ACCA4212E6F090009ECDB /* simplify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = simplify.h; path = ../../simplify.h; sourceTree = "<group>"; };
-		ED3ACCA5212E6F090009ECDB /* expr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = expr.h; path = ../../expr.h; sourceTree = "<group>"; };
-		ED3ACCA6212E6F090009ECDB /* simplify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = simplify.c; path = ../../simplify.c; sourceTree = "<group>"; };
+		EDA95835212FA29B005FD7DD /* algo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = algo.c; path = ../algo.c; sourceTree = "<group>"; };
+		EDA95836212FA29B005FD7DD /* expr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = expr.c; path = ../expr.c; sourceTree = "<group>"; };
+		EDA95837212FA29B005FD7DD /* simplify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = simplify.h; path = ../simplify.h; sourceTree = "<group>"; };
+		EDA95838212FA29B005FD7DD /* algo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = algo.h; path = ../algo.h; sourceTree = "<group>"; };
+		EDA95839212FA29B005FD7DD /* expr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = expr.h; path = ../expr.h; sourceTree = "<group>"; };
+		EDA9583A212FA29B005FD7DD /* simplify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = simplify.c; path = ../simplify.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +48,12 @@
 		ED3ACC82212E521E0009ECDB = {
 			isa = PBXGroup;
 			children = (
+				EDA95835212FA29B005FD7DD /* algo.c */,
+				EDA95838212FA29B005FD7DD /* algo.h */,
+				EDA95836212FA29B005FD7DD /* expr.c */,
+				EDA95839212FA29B005FD7DD /* expr.h */,
+				EDA9583A212FA29B005FD7DD /* simplify.c */,
+				EDA95837212FA29B005FD7DD /* simplify.h */,
 				ED3ACC8D212E521E0009ECDB /* CAS for iOS */,
 				ED3ACC8C212E521E0009ECDB /* Products */,
 			);
@@ -66,12 +72,6 @@
 			children = (
 				ED3ACC8E212E521E0009ECDB /* AppDelegate.swift */,
 				ED3ACC90212E521E0009ECDB /* ViewController.swift */,
-				ED3ACCA2212E6F080009ECDB /* algo.c */,
-				ED3ACCA1212E6F080009ECDB /* algo.h */,
-				ED3ACCA3212E6F080009ECDB /* expr.c */,
-				ED3ACCA5212E6F090009ECDB /* expr.h */,
-				ED3ACCA6212E6F090009ECDB /* simplify.c */,
-				ED3ACCA4212E6F090009ECDB /* simplify.h */,
 				ED3ACC92212E521E0009ECDB /* Main.storyboard */,
 				ED3ACC95212E52240009ECDB /* Assets.xcassets */,
 				ED3ACC97212E52240009ECDB /* LaunchScreen.storyboard */,
@@ -153,10 +153,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ED3ACCA7212E6F090009ECDB /* algo.c in Sources */,
+				EDA9583C212FA29B005FD7DD /* algo.c in Sources */,
 				ED3ACC91212E521E0009ECDB /* ViewController.swift in Sources */,
-				ED3ACCA8212E6F090009ECDB /* expr.c in Sources */,
-				ED3ACCA9212E6F090009ECDB /* simplify.c in Sources */,
+				EDA9583D212FA29B005FD7DD /* expr.c in Sources */,
+				EDA9583E212FA29B005FD7DD /* simplify.c in Sources */,
 				ED3ACC8F212E521E0009ECDB /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
