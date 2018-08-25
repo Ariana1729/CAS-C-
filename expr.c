@@ -171,9 +171,10 @@ void expr_print(struct Expr *node){
 }
 void expr_cmpfree(struct Expr *a,struct Expr *b){
 	if(a==b)return;
-	if(a->type<0)return;
+    if(a->type<EXPR_LBRACE)return;
+    if(b->type<EXPR_LBRACE)return;
 	unsigned int i;
-	for(i=0;i<a->len;++i){
+	for(i=0;i<a->len&&i<b->len;++i){
 		expr_cmpfree(a->data.nodes[i],b->data.nodes[i]);
 	}
 	free(b);

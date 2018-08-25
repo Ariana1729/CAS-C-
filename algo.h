@@ -26,4 +26,8 @@ struct Token *algo_queuepop(struct Queue **stack);
 void algo_printqueue(struct Queue *queue);
 struct Queue *algo_parsetorpn(char *input);//convert to reverse polish notation
 struct Expr *algo_parsetotree(struct Queue *rpn);//convert to syntax tree
+int algo_isconst(struct Expr *node,struct Expr *var);
+double algo_polynomial_exp(struct Expr *node,struct Expr *var);//handle non-double?
+struct Expr *algo_polynomial(struct Expr *node,struct Expr *var);//converts to a polynomial in var
+struct Expr *algo_differentiate(struct Expr *node,struct Expr *var);//differentate wrt var,maybe implement chain rule easier?
 #endif

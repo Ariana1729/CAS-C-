@@ -5,6 +5,7 @@ struct Expr *simplify_add(struct Expr *node);// +(+(a,b),c)...=+(a,b,c)
 struct Expr *simplify_sub(struct Expr *node);// -(a,b)=+(a,*(-1,b))
 struct Expr *simplify_mul(struct Expr *node);// *(*(a,b),c)=*(a,b,c)
 struct Expr *simplify_div(struct Expr *node);// /(a,b)=*(a,^(b,-1))
+struct Expr *simplify_exp(struct Expr *node);// a^0=1,b^1=b
 struct Expr *simplify_root(struct Expr *node);// a root b=b^1/a
 struct Expr *simplify_log(struct Expr *node);// log_a(b)=ln(b)/ln(a)
 struct Expr *simplify_ln(struct Expr *node);// ln(a*b)=ln(a)+ln(b),ln(a^b)=b*ln(a)
@@ -22,4 +23,6 @@ int simplify_peval_int(struct Expr *node);
 struct Expr *simplify_peval(struct Expr *node);
 struct Expr *simplify_expand_func(struct Expr *node);
 struct Expr *simplify_expand(struct Expr *node);
+struct Expr *simplify_pfactor_func(struct Expr *node);
+struct Expr *simplify_pfactor(struct Expr *node);
 #endif

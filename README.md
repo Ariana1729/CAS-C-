@@ -18,10 +18,9 @@ Goal: Implement solving of equations with steps that a human can understand
 ## Simplification algorithms:
 
  - Addition and multiplication commutativity
- - Subtraction and division to addition and multiplication
+ - subtraction->addition, division->multiplication, root->exp
  - Expanding multiplication and exponentiation
  - Factoring common terms for addition and multiplication
-
 ## Ordering
 
 Different types are just compared by a->type - b->type
@@ -38,6 +37,10 @@ Uses shunting yard to parse from string to rpn
 
 Converts rpn to syntax tree
 
+## Polynomial solver
+
+Durand-Kerner method, find complex and repeated roots too
+
 ## ToDo
 * Make code neater, have more headers so less functions clumped together
 * Adding more functions
@@ -46,10 +49,6 @@ Converts rpn to syntax tree
   * Making code easier to change
   * Tokenizing to array
   * Use array instead of stack and queue may be better?
-* Improve differentiation
-  * Use chain rule
-  * Take care of constant case instead of always assuming non-constant
-* Simplification of radicals and logarithms
 * Parsing log(x) instead of log_(a)(b)
 * Integration(definite, indefinite, contour)
 * Differential equations
