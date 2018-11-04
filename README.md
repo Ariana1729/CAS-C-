@@ -1,6 +1,8 @@
 # CAS(C)
 Experimental CAS in C
 
+Note: ill be redesigning this thing to make it easier to read ard dec period
+
 Goal: Implement solving of equations with steps that a human can understand
 
 ## Expression types:
